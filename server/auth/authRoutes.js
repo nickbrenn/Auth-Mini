@@ -1,14 +1,31 @@
-const router = require('express').Router();
+const router = require("express").Router();
+const jwt = require("jsonwebtoken");
 
-const User = require('../users/User');
+const User = require("../users/User");
 
-router.post('/register', function(req, res) {
-  console.log('posting', req.body);
+const secret = "this is a secret broseph";
+
+router.post("/register", function(req, res) {
+  console.log("posting", req.body);
   User.create(req.body)
     .then(user => {
-      res.status(201).json(user);
+      const token = makeToken(user);
+      res.status(201).json({ user, token });
     })
     .catch(err => res.status(500).json(err));
 });
+
+function makeToken(user) {
+  const timestamp = new Date().getTime();
+  const payload = {
+    sub: user._id,
+    iat: timestamp,
+    username: user.username
+  };
+  const options = {
+    expiresIn: "24h"
+  };
+  return jwt.sign(payload, secret, options);
+}
 
 module.exports = router;
